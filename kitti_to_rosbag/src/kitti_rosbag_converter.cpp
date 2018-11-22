@@ -56,6 +56,7 @@ class KittiBagConverter {
   std::string imu_frame_id_;
   std::string cam_frame_id_prefix_;
   std::string velodyne_frame_id_;
+  std::string base_link_frame_id_;
 
   std::string pose_topic_;
   std::string transform_topic_;
@@ -67,12 +68,13 @@ KittiBagConverter::KittiBagConverter(const std::string& calibration_path,
                                      const std::string& output_filename)
     : parser_(calibration_path, dataset_path, true),
       world_frame_id_("world"),
-      imu_frame_id_("imu"),
+      imu_frame_id_("gps"),
+      base_link_frame_id_("base_link"),
       cam_frame_id_prefix_("cam"),
       velodyne_frame_id_("velodyne"),
-      pose_topic_("pose_imu"),
+      pose_topic_("gnss_pose"),
       transform_topic_("transform_imu"),
-      pointcloud_topic_("velodyne_points") {
+      pointcloud_topic_("points_raw") {
   // Load all the timestamp maps and calibration parameters.
   parser_.loadCalibration();
   parser_.loadTimestampMaps();
@@ -173,7 +175,7 @@ void KittiBagConverter::convertTf(uint64_t timestamp_ns,
   tf_imu_world.child_frame_id = imu_frame_id_;
   tf_imu_world.header.stamp = timestamp_ros;
   transformToRos(T_vel_imu.inverse(), &tf_vel_imu);
-  tf_vel_imu.header.frame_id = imu_frame_id_;
+  tf_vel_imu.header.frame_id = base_link_frame_id_;
   tf_vel_imu.child_frame_id = velodyne_frame_id_;
   tf_vel_imu.header.stamp = timestamp_ros;
 
@@ -185,7 +187,7 @@ void KittiBagConverter::convertTf(uint64_t timestamp_ns,
   for (size_t cam_id = 0; cam_id < parser_.getNumCameras(); ++cam_id) {
     T_cam_imu = parser_.T_camN_imu(cam_id);
     transformToRos(T_cam_imu.inverse(), &tf_cam_imu);
-    tf_cam_imu.header.frame_id = imu_frame_id_;
+    tf_cam_imu.header.frame_id = base_link_frame_id_;
     tf_cam_imu.child_frame_id = getCameraFrameId(cam_id);
     tf_cam_imu.header.stamp = timestamp_ros;
     tf_msg.transforms.push_back(tf_cam_imu);
