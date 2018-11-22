@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(kitti_to_rosbag)
 
 find_package(catkin_simple REQUIRED)
+find_package(OpenCV REQUIRED)
 catkin_simple(ALL_DEPS_REQUIRED)
 
 set(CMAKE_MACOSX_RPATH 0)
@@ -32,7 +33,7 @@ target_link_libraries(kitti_rosbag_converter ${PROJECT_NAME})
 cs_add_executable(tiny_disp_view
   src/tiny_disp_view.cpp
 )
-target_link_libraries(tiny_disp_view ${PROJECT_NAME})
+target_link_libraries(tiny_disp_view ${OpenCV_LIBS} ${PROJECT_NAME})
 
 ##########
 # EXPORT #
